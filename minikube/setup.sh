@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash sh
 
 set -e
 
@@ -317,18 +317,45 @@ function removeTokenFromSecret {
     echo "$new_secret" > ./3-Secret/SharedSecret.yaml
 }
 
+function deployIAM {
+        IFS=' '
+        service_name="iam"
+        kubectl apply -f "./2-IAM/IAMSecret.yaml"
+        if [[ " ${from_source[*]} " == *" $service_name "* ]]
+        then
+            colorEcho 35 "Deploy $service_name from source"
+            kubectl apply -f "./2-IAM/sourceDeploy.yaml"
+        else
+            colorEcho 32 "Deploy $service_name"
+            kubectl apply -f "./2-IAM/containerDeploy.yaml"
+        fi
+        kubectl apply -f "./2-IAM/service.yaml"
+}
+
 function deployServices {
     for dir in ./4-Services/*
     do
         IFS=' '
         service_name=$(echo "$dir" | sed "s/.\/4-Services\///")
+        temp_tag=""
+        color_tag=32
         if [[ " ${skip_services[*]} " == *" $service_name "* ]]
         then
-            colorEcho 33 "Deploy $service_name (temporary)"
-        else
-            colorEcho 32 "Deploy $service_name"
+            color_tag=33
+            temp_tag="(temporary)"
         fi
-        kubectl apply -Rf "$dir"
+        if [[ " ${from_source[*]} " == *" $service_name "* ]]
+        then
+            colorEcho 35 "Deploy $service_name from source"
+            kubectl apply -f "$dir/sourceDeploy.yaml"
+        else
+            colorEcho $color_tag "Deploy $service_name $temp_tag"
+            kubectl apply -f "$dir/containerDeploy.yaml"
+        fi
+        if [ -f "$dir/service.yaml" ]
+        then
+            kubectl apply -f "$dir/service.yaml"
+        fi
     done
 }
 
@@ -788,7 +815,7 @@ fi
 
 # check arguments
 
-while getopts "cs:p" option 
+while getopts "cs:d:p" option 
 do 
     case "${option}" 
     in 
@@ -796,6 +823,8 @@ do
         colorEcho 32 "- clear minikube";;
     s)  IFS=', ' read -r -a skip_services <<< "${OPTARG}"
         colorEcho 32 "- skip deployments: ${skip_services[*]}";;
+    d)  IFS=', ' read -r -a from_source <<< "${OPTARG}"
+        colorEcho 32 "- develop from source: ${from_source[*]}";;
     p)  start_proxy="true"
         colorEcho 32 "- start proxy";;
     *) ;;
@@ -813,19 +842,23 @@ sudo -v
 ###
 
 checkTools
-
+echo "$(dirname $PWD) -alldirs -mapall="$(id -u)":"$(id -g)" $(minikube ip)" | sudo tee -a /etc/exports && sudo nfsd restart
 ###
 ### 2. setup minikube
 ###
 
 clearMinikube
 
+<<<<<<< HEAD
 if [ "$os" == "Darwin" ]; then
     minikube start --vm=true --driver=hyperkit --memory $MK_MEMORY --cpus $MK_CPUS
 else
     minikube start --memory $MK_MEMORY --cpus $MK_CPUS
 fi
 
+=======
+minikube start --vm=true --memory $MK_MEMORY --cpus $MK_CPUS
+>>>>>>> 7772e305... Rebuilt minikube setup to allow for Local Code deployment in containers
 minikube addons enable ingress
 minikube addons enable dashboard
 minikube addons enable metrics-server
@@ -834,6 +867,7 @@ minikube addons enable metrics-server
 kubectl -n oih-dev-ns delete pods,services,deployments --all
 kubectl -n oih-dev-ns delete pvc --all
 kubectl delete pv local-volume || true
+kubectl delete pv source-volume || true
 kubectl delete ns oih-dev-ns || true
 
 kubectl -n flows delete pods,services,deployments --all
@@ -860,8 +894,7 @@ waitForPodStatus redis.*1/1
 ###
 ### 5. deploy IAM
 ###
-
-kubectl apply -f ./2-IAM
+deployIAM
 waitForServiceStatus http://iam.localoih.com 200
 
 ###
