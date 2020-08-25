@@ -849,16 +849,12 @@ echo "$(dirname $PWD) -alldirs -mapall="$(id -u)":"$(id -g)" $(minikube ip)" | s
 
 clearMinikube
 
-<<<<<<< HEAD
 if [ "$os" == "Darwin" ]; then
-    minikube start --vm=true --driver=hyperkit --memory $MK_MEMORY --cpus $MK_CPUS
+    minikube start --vm=true --memory $MK_MEMORY --cpus $MK_CPUS
 else
     minikube start --memory $MK_MEMORY --cpus $MK_CPUS
 fi
 
-=======
-minikube start --vm=true --memory $MK_MEMORY --cpus $MK_CPUS
->>>>>>> 7772e305... Rebuilt minikube setup to allow for Local Code deployment in containers
 minikube addons enable ingress
 minikube addons enable dashboard
 minikube addons enable metrics-server
