@@ -84,18 +84,18 @@ spec:
               #readOnly: true
           ports:
             - containerPort: 3099
-          #livenessProbe:
-          #  httpGet:
-          #    path: /healthcheck
-          #    port: 3099
-          #  initialDelaySeconds: 120
-          #  timeoutSeconds: 1
-          #readinessProbe:
-          #  httpGet:
-          #    path: /healthcheck
-          #    port: 3099
-          #  initialDelaySeconds: 10
-          #  timeoutSeconds: 1
+          livenessProbe:
+            httpGet:
+              path: /healthcheck
+              port: 3099
+            initialDelaySeconds: 120
+            timeoutSeconds: 1
+          readinessProbe:
+            httpGet:
+              path: /healthcheck
+              port: 3099
+            initialDelaySeconds: 10
+            timeoutSeconds: 1
       volumes:
         - name: code
           persistentVolumeClaim:
