@@ -842,7 +842,15 @@ sudo -v
 ###
 
 checkTools
-echo "$(dirname $PWD) -alldirs -mapall="$(id -u)":"$(id -g)" $(minikube ip)" | sudo tee -a /etc/exports && sudo nfsd restart
+
+###
+### 1a. If services will be loaded for development from source, build the NFS share
+###
+if ${from_source}
+then
+    echo "$(dirname $PWD) -alldirs -mapall="$(id -u)":"$(id -g)" $(minikube ip)" | sudo tee -a /etc/exports && sudo nfsd restart
+fi
+
 ###
 ### 2. setup minikube
 ###
