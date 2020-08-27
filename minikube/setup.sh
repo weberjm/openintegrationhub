@@ -832,9 +832,15 @@ fi
 ###
 ### 2a. If services will be loaded for development from source, build the NFS share
 ###
-if ${from_source}
+if [ -n "${from_source}" ]
 then
-    echo "$(dirname $PWD) -alldirs -mapall="$(id -u)":"$(id -g)" $(minikube ip)" | sudo tee -a /etc/exports && sudo nfsd restart
+    nfs_script="$(dirname $PWD) -alldirs -mapall="$(id -u)":"$(id -g)" $(minikube ip)"
+    if [ -z "$(grep ${nfs_script} /etc/exports)" ]
+    then 
+        echo "${nfs_script}" | sudo tee -a /etc/exports && sudo nfsd restart
+    fi
+    #echo "$(dirname $PWD) -alldirs -mapall="$(id -u)":"$(id -g)" $(minikube ip)" | sudo tee -a /etc/exports && sudo nfsd restart
+    #echo nfs_script
 fi
 
 minikube addons enable ingress
