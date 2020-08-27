@@ -816,14 +816,6 @@ sudo -v
 ###
 
 checkTools
-echo "$(dirname $PWD) -alldirs -mapall="$(id -u)":"$(id -g)" $(minikube ip)" | sudo tee -a /etc/exports && sudo nfsd restart
-###
-### 1a. If services will be loaded for development from source, build the NFS share
-###
-if ${from_source}
-then
-    echo "$(dirname $PWD) -alldirs -mapall="$(id -u)":"$(id -g)" $(minikube ip)" | sudo tee -a /etc/exports && sudo nfsd restart
-fi
 
 ###
 ### 2. setup minikube
@@ -835,6 +827,14 @@ if [ "$os" == "Darwin" ]; then
     minikube start --vm=true --memory $MK_MEMORY --cpus $MK_CPUS
 else
     minikube start --memory $MK_MEMORY --cpus $MK_CPUS
+fi
+
+###
+### 2a. If services will be loaded for development from source, build the NFS share
+###
+if ${from_source}
+then
+    echo "$(dirname $PWD) -alldirs -mapall="$(id -u)":"$(id -g)" $(minikube ip)" | sudo tee -a /etc/exports && sudo nfsd restart
 fi
 
 minikube addons enable ingress
