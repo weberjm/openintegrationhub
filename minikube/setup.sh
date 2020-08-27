@@ -783,11 +783,7 @@ fi
 
 # check arguments
 
-<<<<<<< HEAD
-while getopts "cs:i:p" option 
-=======
-while getopts "cs:d:p" option 
->>>>>>> Rebuilt minikube setup to allow for Local Code deployment in containers
+while getopts "cs:i:d:p" option 
 do 
     case "${option}" 
     in 
@@ -797,15 +793,12 @@ do
     # -s [serviceName,..] remove service deployments after setup is done
     s)  IFS=', ' read -r -a skip_services <<< "${OPTARG}"
         colorEcho 32 "- skip deployments: ${skip_services[*]}";;
-<<<<<<< HEAD
     # -i imageName use custom image for development component
     i)  IFS='' read -r DEV_CONTAINER_IMAGE <<< "${OPTARG}"
         colorEcho 32 "- use custom image '$DEV_CONTAINER_IMAGE' for dev component";;
     # -p proxy dbs and message queue
-=======
     d)  IFS=', ' read -r -a from_source <<< "${OPTARG}"
         colorEcho 32 "- develop from source: ${from_source[*]}";;
->>>>>>> Rebuilt minikube setup to allow for Local Code deployment in containers
     p)  start_proxy="true"
         colorEcho 32 "- start proxy";;
     *) ;;
@@ -823,7 +816,7 @@ sudo -v
 ###
 
 checkTools
-
+echo "$(dirname $PWD) -alldirs -mapall="$(id -u)":"$(id -g)" $(minikube ip)" | sudo tee -a /etc/exports && sudo nfsd restart
 ###
 ### 2. setup minikube
 ###
@@ -831,7 +824,7 @@ checkTools
 clearMinikube
 
 if [ "$os" == "Darwin" ]; then
-    minikube start --vm=true --memory $MK_MEMORY --cpus $MK_CPUS
+    minikube start --vm=true --driver=hyperkit --memory $MK_MEMORY --cpus $MK_CPUS
 else
     minikube start --memory $MK_MEMORY --cpus $MK_CPUS
 fi
@@ -839,14 +832,6 @@ fi
 minikube addons enable ingress
 minikube addons enable dashboard
 minikube addons enable metrics-server
-
-###
-### 2a. If services will be loaded for development from source, build the NFS share
-###
-if [ "${from_source}" ]
-then
-    echo "$(dirname $PWD) -alldirs -mapall="$(id -u)":"$(id -g)" $(minikube ip)" | sudo tee -a /etc/exports && sudo nfsd restart
-fi
 
 # remove oih resources
 kubectl -n oih-dev-ns delete pods,services,deployments --all
