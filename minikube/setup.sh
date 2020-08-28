@@ -839,8 +839,6 @@ then
     then 
         echo "${nfs_script}" | sudo tee -a /etc/exports && sudo nfsd restart
     fi
-    #echo "$(dirname $PWD) -alldirs -mapall="$(id -u)":"$(id -g)" $(minikube ip)" | sudo tee -a /etc/exports && sudo nfsd restart
-    #echo nfs_script
 fi
 
 minikube addons enable ingress
